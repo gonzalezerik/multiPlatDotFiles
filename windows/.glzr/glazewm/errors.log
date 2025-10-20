@@ -1,0 +1,26 @@
+[2m2025-10-14T16:29:33.993459Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Another instance of the application is already running.
+[2m2025-10-14T16:29:45.736213Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: duplicate field `match` at line 134 column 5
+[2m2025-10-14T16:30:09.953995Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: duplicate field `match` at line 134 column 5
+[2m2025-10-14T16:31:31.432507Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: duplicate field `match` at line 134 column 5
+[2m2025-10-14T16:33:49.867472Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: duplicate field `match` at line 134 column 5
+[2m2025-10-14T16:33:54.100010Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: duplicate field `match` at line 134 column 5
+[2m2025-10-14T16:35:20.256169Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: duplicate field `match` at line 134 column 5
+[2m2025-10-14T16:41:33.010239Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Another instance of the application is already running.
+[2m2025-10-14T16:41:40.139487Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Another instance of the application is already running.
+[2m2025-10-14T16:53:06.439552Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m did not find expected key at line 158 column 41, while parsing a block mapping at line 158 column 9
+[2m2025-10-14T16:53:39.041583Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[1]: missing field `commands` at line 156 column 5
+[2m2025-10-14T18:38:02.120186Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: missing field `match` at line 134 column 7
+[2m2025-10-14T18:38:14.492912Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules: invalid type: map, expected a sequence at line 134 column 5
+[2m2025-10-14T18:39:25.500409Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules: invalid type: map, expected a sequence at line 134 column 5
+[2m2025-10-14T18:39:39.580304Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: missing field `match` at line 134 column 7
+[2m2025-10-14T18:40:02.651877Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: missing field `match` at line 134 column 7
+[2m2025-10-14T18:40:45.795706Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0]: missing field `match` at line 135 column 7
+[2m2025-10-14T18:43:47.891280Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0].match: invalid type: map, expected a sequence at line 135 column 7
+[2m2025-10-14T18:43:53.867689Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0].match: invalid type: map, expected a sequence at line 135 column 7
+[2m2025-10-14T18:57:57.511725Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Another instance of the application is already running.
+[2m2025-10-14T19:20:14.814565Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Another instance of the application is already running.
+[2m2025-10-14T19:30:28.988939Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m window_rules[0].match: invalid type: map, expected a sequence at line 136 column 7
+[2m2025-10-14T20:34:08.391668Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Another instance of the application is already running.
+[2m2025-10-20T18:30:43.710442Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Failed to send response: channel closed
+[2m2025-10-20T18:30:43.712771Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Failed to send response: channel closed
+[2m2025-10-20T18:30:43.712939Z[0m [31mERROR[0m [2mglazewm[0m[2m:[0m Failed to send response: channel closed
