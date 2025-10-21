@@ -1,7 +1,7 @@
 
--- init.lua — Neovim 0.11+ (Windows-friendly), Rose Pine, C# + JS/TS
--- Dataverse helpers: dynamic PAC wizard, PRT task, floating terminal, and C# snippets.
--- After pasting: RESTART Neovim, run :Lazy sync, then restart again.
+-- :contentReference[oaicite:0]{index=0}
+-- init.lua — Neovim 0.11+ (Windows-friendly)
+-- Full setup for Blink.CMP + LuaSnip + D365/Dataverse + JS PowerApps snippets
 
 -----------------------------------------------------------
 -- Basics
@@ -14,16 +14,12 @@ vim.opt.showmode = false
 vim.opt.spelllang = "en_gb"
 vim.g.mapleader = ","
 
--- nvim-tree: disable netrw
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
--- Clipboard
 vim.opt.clipboard:append({ "unnamed", "unnamedplus" })
-
--- Display / UI
 vim.opt.termguicolors = true
-vim.o.background = "light" -- set "dark" if you prefer
+vim.o.background = "light"
 vim.opt.cursorline = true
 vim.opt.cursorcolumn = true
 vim.opt.signcolumn = "yes"
@@ -31,13 +27,11 @@ vim.opt.wrap = false
 vim.opt.sidescrolloff = 8
 vim.opt.scrolloff = 8
 
--- Title + undo
 vim.opt.title = true
 vim.opt.titlestring = "nvim"
 vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"
 vim.opt.undofile = true
 
--- Indent / tabs
 vim.opt.tabstop = 2
 vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
@@ -51,68 +45,124 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Search
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.gdefault = true
-
--- Splits
 vim.opt.splitright = true
 vim.opt.splitbelow = true
-
--- Inlay hints (0.11+)
 vim.lsp.inlay_hint.enable(true)
+
+-----------------------------------------------------------
+-- Filetype tweaks
+-----------------------------------------------------------
+vim.filetype.add({
+  extension = {
+    resx = "xml",
+    svg  = "xml",
+    xslt = "xml",
+    xsl  = "xml",
+  },
+})
 
 -----------------------------------------------------------
 -- lazy.nvim bootstrap
 -----------------------------------------------------------
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({ "git", "clone", "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git", "--branch=stable", lazypath })
+  vim.fn.system({
+    "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git", "--branch=stable", lazypath
+  })
 end
 vim.opt.rtp:prepend(lazypath)
 
 -----------------------------------------------------------
--- Plugins (minimal, Windows-safe) + Dataverse helpers
+-- Plugins
 -----------------------------------------------------------
 local plugins = {
   { "nvim-lua/plenary.nvim" },
   { "nvim-tree/nvim-web-devicons" },
-
-  -- Theme: Rose Pine
   { "rose-pine/neovim", name = "rose-pine" },
-
-  -- Statusline / File tree / Finder
   { "nvim-lualine/lualine.nvim" },
   { "nvim-tree/nvim-tree.lua" },
   { "nvim-telescope/telescope.nvim" },
-  -- NOTE: skipping telescope-fzf-native to avoid 'make' error on Windows
-
-  -- Treesitter
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
-
-  -- LSP stack (mason + new API usage below)
   { "williamboman/mason.nvim" },
   { "williamboman/mason-lspconfig.nvim" },
-  { "neovim/nvim-lspconfig" }, -- still needed as a dependency for server defs
-  { "Hoffs/omnisharp-extended-lsp.nvim" }, -- optional: better goto-def for C#
-
-  -- Formatting
+  { "neovim/nvim-lspconfig" },
+  { "Hoffs/omnisharp-extended-lsp.nvim" },
   { "stevearc/conform.nvim" },
 
-  -- Autocomplete (blink.cmp)
-  { "saghen/blink.cmp", version = "1.*", opts_extend = { "sources.default" } },
+  
+  {
+    "saghen/blink.cmp",
+    version = "1.*",
+    dependencies = {
+      { "L3MON4D3/LuaSnip", version = "v2.*" },
+      "rafamadriz/friendly-snippets",
+    },
+    ---@module 'blink.cmp'
+    ---@type blink.cmp.Config
+    opts = {
+      keymap = {
+        preset = "default",
+        -- Tab cycles down the list AND live-inserts the selection
+        ["<Tab>"] = {
+          function(cmp) return cmp.select_next({ auto_insert = true }) end,
+          "fallback",
+        },
+        -- Shift-Tab goes back up
+        ["<S-Tab>"] = {
+          function(cmp) return cmp.select_prev({ auto_insert = true }) end,
+          "fallback",
+        },
+        -- Enter confirms/expands the highlighted item
+        ["<CR>"] = { "accept", "fallback" },
+      },
 
-  -- ===== Dataverse workflow helpers =====
-  -- Floating terminal for dotnet/pac
+      appearance = { nerd_font_variant = "mono" },
+
+      completion = {
+        trigger = {
+          prefetch_on_insert = true,
+          show_on_keyword = true,
+          show_on_trigger_character = true,
+        },
+        menu = {
+          auto_show = true,
+          auto_show_delay_ms = 0,
+          border = "rounded",
+        },
+        -- Auto insert while navigating so you see it inline as you Tab around
+        list = {
+          selection = {
+            preselect = true,
+            auto_insert = true,
+          },
+        },
+        accept = { auto_brackets = { enabled = true } },
+        documentation = { auto_show = true, auto_show_delay_ms = 120 },
+        ghost_text = { enabled = false },
+      },
+
+      sources = {
+        default = { "lsp", "path", "snippets", "buffer" },
+      },
+
+      fuzzy = { implementation = "prefer_rust_with_warning" },
+      snippets = { preset = "luasnip" },
+    },
+    opts_extend = { "sources.default" },
+  },
+
   { "akinsho/toggleterm.nvim", version = "*", config = true },
-  -- Tasks (build, open PRT)
   { "stevearc/overseer.nvim", opts = {} },
-
-  -- Snippets engine + community snippets
-  { "L3MON4D3/LuaSnip", version = "v2.*" },
   { "rafamadriz/friendly-snippets" },
+
+
+  { "akinsho/toggleterm.nvim", version = "*", config = true },
+  { "stevearc/overseer.nvim", opts = {} },
+  { "rafamadriz/friendly-snippets" }
 }
 
 require("lazy").setup(plugins, { ui = { border = "rounded" } })
@@ -126,7 +176,6 @@ require("rose-pine").setup({
   disable_float_background = false,
 })
 vim.cmd.colorscheme("rose-pine-moon")
-
 require("lualine").setup()
 require("nvim-tree").setup()
 require("telescope").setup()
@@ -137,10 +186,8 @@ require("telescope").setup()
 require("nvim-treesitter.configs").setup({
   ensure_installed = {
     "lua", "vim", "bash", "json", "yaml", "toml", "markdown", "markdown_inline",
-    "html", "css",
-    "javascript", "typescript", "tsx",   -- JS/TS/React
-    "c_sharp",                           -- C#
-    "python", "rust", "go", "java",
+    "html", "css", "javascript", "typescript", "tsx", "xml", "c_sharp",
+    "python", "rust", "go", "java"
   },
   auto_install = true,
   highlight = { enable = true },
@@ -150,23 +197,17 @@ vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldlevel = 99
 
 -----------------------------------------------------------
--- LSP (Mason + new 0.11 API: vim.lsp.config / vim.lsp.enable)
+-- LSP setup
 -----------------------------------------------------------
 require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed = {
-    "lua_ls",
-    "jsonls",
-    "yamlls",
-    "html",
-    "cssls",
-    "ts_ls",     -- << new name (was tsserver)
-    "eslint",
-    "omnisharp",
+    "lua_ls", "jsonls", "yamlls", "html", "cssls",
+    "ts_ls", "eslint", "omnisharp",
+    "lemminx", "emmet_language_server", "stylelint_lsp"
   },
 })
 
--- Capabilities (prefer blink if available)
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 local ok_blink, blink = pcall(require, "blink.cmp")
 if ok_blink and blink.get_lsp_capabilities then
@@ -177,7 +218,6 @@ local function on_attach(_, bufnr)
   local map = function(lhs, rhs, desc)
     vim.keymap.set("n", lhs, rhs, { buffer = bufnr, desc = desc })
   end
-  -- OmniSharp extended handler if available
   local ok_ext, omnisharp_ext = pcall(require, "omnisharp_extended")
   if ok_ext then
     map("gd", omnisharp_ext.handler, "Go to definition (C#)")
@@ -185,31 +225,25 @@ local function on_attach(_, bufnr)
     map("gd", vim.lsp.buf.definition, "Go to definition")
   end
   map("gr", vim.lsp.buf.references, "References")
-  map("K",  vim.lsp.buf.hover, "Hover")
+  map("K", vim.lsp.buf.hover, "Hover")
   map("<leader>rn", vim.lsp.buf.rename, "Rename")
   map("<leader>ca", vim.lsp.buf.code_action, "Code action")
   map("]d", vim.diagnostic.goto_next, "Next diagnostic")
   map("[d", vim.diagnostic.goto_prev, "Prev diagnostic")
 end
 
--- Helper to define, then enable servers with the new API
 local function cfg(name, opts) vim.lsp.config(name, opts or {}) end
-
-cfg("lua_ls",        { on_attach = on_attach, capabilities = capabilities,
-  settings = { Lua = { diagnostics = { globals = { "vim" } }, telemetry = { enable = false } } } })
-cfg("jsonls",        { on_attach = on_attach, capabilities = capabilities })
-cfg("yamlls",        { on_attach = on_attach, capabilities = capabilities })
-cfg("html",          { on_attach = on_attach, capabilities = capabilities })
-cfg("cssls",         { on_attach = on_attach, capabilities = capabilities })
-cfg("ts_ls",         { on_attach = on_attach, capabilities = capabilities }) -- JS/TS
-cfg("eslint",        { on_attach = on_attach, capabilities = capabilities }) -- ESLint LSP
-cfg("omnisharp",     { on_attach = on_attach, capabilities = capabilities }) -- C#
-
+cfg("lua_ls", { on_attach = on_attach, capabilities = capabilities })
+cfg("ts_ls", { on_attach = on_attach, capabilities = capabilities })
+cfg("eslint", { on_attach = on_attach, capabilities = capabilities })
+cfg("omnisharp", { on_attach = on_attach, capabilities = capabilities })
+cfg("lemminx", { on_attach = on_attach, capabilities = capabilities })
+cfg("emmet_language_server", { on_attach = on_attach, capabilities = capabilities })
+cfg("stylelint_lsp", { on_attach = on_attach, capabilities = capabilities })
 for _, name in ipairs({
-  "lua_ls","jsonls","yamlls","html","cssls","ts_ls","eslint","omnisharp",
-}) do
-  vim.lsp.enable(name)
-end
+  "lua_ls", "ts_ls", "eslint", "omnisharp",
+  "lemminx", "emmet_language_server", "stylelint_lsp"
+}) do vim.lsp.enable(name) end
 
 -----------------------------------------------------------
 -- Formatting (Conform)
@@ -228,6 +262,8 @@ require("conform").setup({
     yaml = { "prettierd", "prettier" },
     markdown = { "prettierd", "prettier" },
     cs = { "csharpier" },
+    xml = { "xmllint" },
+    svg = { "svgo" },
   },
 })
 vim.keymap.set("n", "<leader>fo", function()
@@ -235,9 +271,33 @@ vim.keymap.set("n", "<leader>fo", function()
 end, { desc = "Format (Conform → LSP)" })
 
 -----------------------------------------------------------
--- blink.cmp (autocomplete) — defaults are good
+-- LuaSnip: load custom PowerApps JS snippets
 -----------------------------------------------------------
-pcall(function() require("blink.cmp").setup({}) end)
+pcall(function()
+  require("luasnip.loaders.from_vscode").lazy_load()
+  local cfg = vim.fn.stdpath("config") .. "/lua/snippets"
+  if vim.fn.isdirectory(cfg) == 1 then
+    require("luasnip.loaders.from_lua").lazy_load({ paths = cfg })
+  end
+  require("snippets.powerapps_js")
+end)
+
+pcall(function()
+  local ls = require("luasnip")
+  ls.filetype_extend("typescript", { "javascript" })
+  ls.filetype_extend("javascriptreact", { "javascript" })
+  ls.filetype_extend("typescriptreact", { "javascript" })
+end)
+
+-- IMPORTANT: Let blink.cmp drive <Tab>/<S-Tab> for accepting/jumping.
+-- We remove custom LuaSnip <Tab> mappings to avoid conflicts.
+local ok_ls, ls = pcall(require, "luasnip")
+if ok_ls then
+  ls.config.set_config({ history = true, updateevents = "TextChanged,TextChangedI" })
+end
+
+-- Completion UX
+vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
 -----------------------------------------------------------
 -- Dataverse workflow: toggleterm + overseer tasks + keys
@@ -248,24 +308,34 @@ vim.keymap.set("n", "<leader>tt", ":ToggleTerm<CR>", { desc = "Toggle terminal (
 
 local ok_overseer, overseer = pcall(require, "overseer")
 if ok_overseer then
-  -- keep build + PRT tasks
   overseer.register_template({
     name = "dotnet build (Debug)",
     builder = function()
-      return {
-        cmd = { "dotnet" },
-        args = { "build", "-c", "Debug" },
-        cwd = vim.fn.getcwd(),
-        components = { "default" },
-      }
+      return { cmd = { "dotnet" }, args = { "build", "-c", "Debug" }, cwd = vim.fn.getcwd(), components = { "default" } }
     end,
   })
   overseer.register_template({
     name = "open Plugin Registration Tool (PRT)",
     builder = function()
+      return { cmd = { "pac" }, args = { "tool", "prt" }, cwd = vim.fn.getcwd(), components = { "default" } }
+    end,
+  })
+  overseer.register_template({
+    name = "minify webresources (esbuild)",
+    builder = function()
       return {
-        cmd = { "pac" },
-        args = { "tool", "prt" },
+        cmd = { "node" },
+        args = {
+          "-E",
+          [[
+            const {execSync} = require('child_process');
+            try {
+              execSync('esbuild --bundle src/new_/Scripts/*.js --minify --outdir=upload/new_/Scripts', {stdio:'inherit'});
+              execSync('esbuild src/new_/Styles/*.css --minify --outdir=upload/new_/Styles', {stdio:'inherit'});
+              console.log('Minify complete.');
+            } catch (e) { process.exit(1); }
+          ]]
+        },
         cwd = vim.fn.getcwd(),
         components = { "default" },
       }
@@ -278,264 +348,33 @@ if ok_overseer then
 end
 
 -----------------------------------------------------------
--- Dataverse: dynamic “new plugin” wizard + auto class sync
+-- Snippets (LuaSnip) — D365 Web Resources quick helpers
 -----------------------------------------------------------
-local uv = vim.loop
-local function path_join(a, b) return (a .. "/" .. b):gsub("//+", "/") end
-local function notify(msg, level) vim.notify(msg, level or vim.log.levels.INFO, { title = "Dataverse" }) end
-local function write_file(abs_path, content)
-  local lines = {}
-  for s in content:gmatch("([^\n]*)\n?") do table.insert(lines, s) end
-  return vim.fn.writefile(lines, abs_path) == 0
-end
+local ls_ok2, ls2 = pcall(require, "luasnip")
+if ls_ok2 then
+  local s = ls2.snippet
+  local t = ls2.text_node
+  local i = ls2.insert_node
 
--- PluginBase-style class template
-local function pluginbase_template(namespace_name, class_name, entity_name)
-  entity_name = entity_name or "account"
-  return ([[
-using Microsoft.Xrm.Sdk;
-using System;
+  -- $webresource directive (XML attr value)
+  ls2.add_snippets("xml", {
+    s("webres", { t('$webresource:'), i(1, 'new_/path/file.ext') }),
+  })
 
-namespace %s
-{
-    public class %s : PluginBase
-    {
-        public %s(string unsecureConfiguration, string secureConfiguration)
-            : base(typeof(%s))
-        { }
-
-        protected override void ExecuteDataversePlugin(ILocalPluginContext ctx)
-        {
-            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
-
-            var context = ctx.PluginExecutionContext;
-            var service = ctx.PluginUserService;
-            var trace   = ctx.TracingService;
-
-            // Only on Create of %s
-            if (!string.Equals(context.MessageName, "Create", StringComparison.OrdinalIgnoreCase) ||
-                !string.Equals(context.PrimaryEntityName, "%s", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            // Avoid accidental recursion
-            if (context.Depth > 1) return;
-
-            // Build follow-up Task due in 7 days (UTC)
-            var due = DateTime.UtcNow.AddDays(7);
-
-            var task = new Entity("task");
-            task["subject"]        = "Send e-mail to the new customer.";
-            task["description"]    = "Follow up with the customer. Check if there are any new issues that need resolution.";
-            task["scheduledstart"] = due;
-            task["scheduledend"]   = due;
-            task["category"]       = context.PrimaryEntityName;
-
-            // Regarding = the created %s
-            if (context.PrimaryEntityId != Guid.Empty)
-            {
-                task["regardingobjectid"] = new EntityReference("%s", context.PrimaryEntityId);
-            }
-
-            trace.Trace("FollowupPlugin: Creating the task activity.");
-            service.Create(task);
-        }
-    }
-}
-]]):format(namespace_name, class_name, class_name, class_name, entity_name, entity_name, entity_name, entity_name)
-end
-
--- run a shell command synchronously in cwd (Windows-friendly)
-local function run_in(dir, cmd, args)
-  local cwd = uv.cwd()
-  vim.fn.chdir(dir)
-  local out = vim.fn.system({ cmd, unpack(args or {}) })
-  local code = vim.v.shell_error
-  vim.fn.chdir(cwd)
-  return code, out
-end
-
--- Create new Dataverse plugin project + initial class
-local function dataverse_new_plugin()
-  vim.ui.input({ prompt = "Project / Folder name: " }, function(project)
-    if not project or project == "" then return end
-    vim.ui.input({ prompt = "C# class name (e.g. FollowupPlugin): " }, function(classname)
-      if not classname or classname == "" then return end
-
-      local namespace = project
-      local root = vim.fn.getcwd()
-      local proj_dir = path_join(root, project)
-
-      if vim.fn.isdirectory(proj_dir) == 0 then
-        vim.fn.mkdir(proj_dir, "p")
-      end
-
-      notify("Scaffolding project with PAC…")
-      local code, out = run_in(proj_dir, "pac", { "plugin", "init", "--skip-signing" })
-      if code ~= 0 then
-        notify("PAC init failed:\n" .. out, vim.log.levels.ERROR)
-        return
-      end
-
-      -- Ensure Dataverse SDK (harmless if already present)
-      run_in(proj_dir, "dotnet", { "add", "package", "Microsoft.CrmSdk.CoreAssemblies" })
-
-      local cs_file = path_join(proj_dir, classname .. ".cs")
-      if not write_file(cs_file, pluginbase_template(namespace, classname, "account")) then
-        notify("Failed to write " .. cs_file, vim.log.levels.ERROR)
-        return
-      end
-
-      vim.cmd("edit " .. vim.fn.fnameescape(cs_file))
-      notify("Project created: " .. proj_dir .. "\nClass: " .. classname .. ".cs")
-    end)
-  end)
-end
-
--- Auto-sync namespace + class name to match folder and current file name
-local function sync_cs_namespace_and_class()
-  local buf = vim.api.nvim_get_current_buf()
-  local file = vim.api.nvim_buf_get_name(buf)
-  if file == "" or not file:match("%.cs$") then return end
-
-  local filename = vim.fn.fnamemodify(file, ":t")     -- Foo.cs
-  local class    = filename:gsub("%.cs$", "")         -- Foo
-  local proj     = vim.fn.fnamemodify(file, ":p:h:t") -- folder name as namespace
-
-  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-  local changed = false
-
-  for i, ln in ipairs(lines) do
-    -- namespace Foo.Bar → namespace <proj>
-    if ln:match("^%s*namespace%s+") then
-      local new = "namespace " .. proj
-      if ln ~= new then lines[i] = new; changed = true end
-    end
-    -- public class OldName : PluginBase → class <class>
-    if ln:match("^%s*public%s+class%s+") then
-      local new = ln:gsub("^%s*public%s+class%s+[%w_]+", "public class " .. class)
-      if new ~= ln then lines[i] = new; changed = true end
-    end
-    -- constructor: public OldName( … ) : base(typeof(OldName))
-    if ln:match("^%s*public%s+[%w_]+%s*%(") and ln:match(":%s*base%(%s*typeof%(%s*[%w_]+%s*%)%s*%)") then
-      local new = ln
-        :gsub("^%s*public%s+[%w_]+%s*%(", "        public " .. class .. "(")
-        :gsub("typeof%(%s*[%w_]+%s*%)", "typeof(" .. class .. ")")
-      if new ~= ln then lines[i] = new; changed = true end
-    end
-  end
-
-  if changed then
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-    notify("Synchronized namespace/class to file & folder.")
-  end
-end
-
--- Map <leader>pi to the dynamic wizard
-vim.keymap.set("n", "<leader>pi", dataverse_new_plugin, { desc = "Dataverse: New plugin (dynamic)" })
-
--- Auto-sync on save & on rename
-vim.api.nvim_create_autocmd({ "BufWritePre", "BufFilePost" }, {
-  pattern = { "*.cs" },
-  callback = sync_cs_namespace_and_class,
-})
-
------------------------------------------------------------
--- C# Dataverse snippets (LuaSnip) - inline loader
------------------------------------------------------------
-local ls_ok, ls = pcall(require, "luasnip")
-if ls_ok then
-  local s = ls.snippet
-  local t = ls.text_node
-  -- PluginBase pattern (PAC template)
-  ls.add_snippets("cs", {
-    s("dvplugin_base", {
-      t({
-        "using Microsoft.Xrm.Sdk;",
-        "using System;",
-        "",
-        "namespace BasicPlugin",
-        "{",
-        "    public class Plugin1 : PluginBase",
-        "    {",
-        "        public Plugin1(string unsecureConfiguration, string secureConfiguration)",
-        "            : base(typeof(Plugin1))",
-        "        { }",
-        "",
-        "        protected override void ExecuteDataversePlugin(ILocalPluginContext ctx)",
-        "        {",
-        "            if (ctx == null) throw new ArgumentNullException(nameof(ctx));",
-        "            var context = ctx.PluginExecutionContext;",
-        "            var service = ctx.PluginUserService;",
-        "            var trace = ctx.TracingService;",
-        "",
-        "            // Only on Create of account",
-        "            if (!string.Equals(context.MessageName, \"Create\", StringComparison.OrdinalIgnoreCase) ||",
-        "                !string.Equals(context.PrimaryEntityName, \"account\", StringComparison.OrdinalIgnoreCase))",
-        "                return;",
-        "",
-        "            if (context.Depth > 1) return;",
-        "",
-        "            var due = DateTime.UtcNow.AddDays(7);",
-        "            var task = new Entity(\"task\");",
-        "            task[\"subject\"] = \"Send e-mail to the new customer.\";",
-        "            task[\"description\"] = \"Follow up with the customer. Check for any new issues.\";",
-        "            task[\"scheduledstart\"] = due;",
-        "            task[\"scheduledend\"] = due;",
-        "            task[\"category\"] = context.PrimaryEntityName;",
-        "            if (context.PrimaryEntityId != Guid.Empty)",
-        "                task[\"regardingobjectid\"] = new EntityReference(\"account\", context.PrimaryEntityId);",
-        "            trace.Trace(\"FollowupPlugin: Creating the task activity.\");",
-        "            service.Create(task);",
-        "        }",
-        "    }",
-        "}",
-      }),
+  -- Xrm.Navigation.openWebResource
+  ls2.add_snippets("javascript", {
+    s("xopen", {
+      t('Xrm.Navigation.openWebResource("'), i(1, 'new_/path/page.htm'),
+      t('", '), i(2, 'encodeURIComponent("first=One&second=Two")'),
+      t(", "), i(3, "{ openInNewWindow: true, height: 600, width: 800 }"), t(");")
     }),
   })
-  -- Raw IPlugin pattern (MS doc style)
-  ls.add_snippets("cs", {
-    s("dvplugin_ip", {
-      t({
-        "using System;",
-        "using System.ServiceModel;",
-        "using Microsoft.Xrm.Sdk;",
-        "",
-        "namespace BasicPlugin",
-        "{",
-        "    public class FollowupPlugin : IPlugin",
-        "    {",
-        "        public void Execute(IServiceProvider serviceProvider)",
-        "        {",
-        "            var trace = (ITracingService)serviceProvider.GetService(typeof(ITracingService));",
-        "            var context = (IPluginExecutionContext)serviceProvider.GetService(typeof(IPluginExecutionContext));",
-        "            var factory = (IOrganizationServiceFactory)serviceProvider.GetService(typeof(IOrganizationServiceFactory));",
-        "            var service = factory.CreateOrganizationService(context.UserId);",
-        "",
-        "            if (!\"Create\".Equals(context.MessageName, StringComparison.OrdinalIgnoreCase) ||",
-        "                !\"account\".Equals(context.PrimaryEntityName, StringComparison.OrdinalIgnoreCase)) return;",
-        "",
-        "            try {",
-        "                var due = DateTime.UtcNow.AddDays(7);",
-        "                var task = new Entity(\"task\");",
-        "                task[\"subject\"] = \"Send e-mail to the new customer.\";",
-        "                task[\"description\"] = \"Follow up with the customer.\";",
-        "                task[\"scheduledstart\"] = due;",
-        "                task[\"scheduledend\"] = due;",
-        "                task[\"category\"] = context.PrimaryEntityName;",
-        "                if (context.PrimaryEntityId != Guid.Empty)",
-        "                    task[\"regardingobjectid\"] = new EntityReference(\"account\", context.PrimaryEntityId);",
-        "                trace.Trace(\"FollowupPlugin: Creating the task activity.\");",
-        "                service.Create(task);",
-        "            }",
-        "            catch (FaultException<OrganizationServiceFault> ex) {",
-        "                throw new InvalidPluginExecutionException(\"Error in FollowupPlugin.\", ex);",
-        "            }",
-        "        }",
-        "    }",
-        "}",
-      }),
-    }),
+  ls2.add_snippets("html", {
+    s("linkcss",  { t('<link rel="stylesheet" type="text/css" href="../styles/'),  i(1, 'styles.css'),   t('" />') }),
+    s("scriptjs", { t('<script type="text/javascript" src="../scripts/'),          i(1, 'myScript.js'), t('"></script>') }),
+    s("imgwr",    { t('<img src="../Images/'),                                     i(1, 'image1.png'),  t('" />') }),
   })
+
   -- Load community snippets too
   pcall(function() require("luasnip.loaders.from_vscode").lazy_load() end)
 end
@@ -567,4 +406,96 @@ vim.keymap.set("n", "<leader>fa", tele.find_files, {})
 vim.keymap.set("n", "<leader>fg", tele.live_grep, {})
 vim.keymap.set("n", "<leader>fb", tele.buffers, {})
 vim.keymap.set("n", "<leader>fh", tele.help_tags, {})
+
+-----------------------------------------------------------
+-- Cheat Sheets picker — opens PDFs from your directory
+-----------------------------------------------------------
+-- Your cheatsheets directory (Windows)
+vim.g.cheatsheets_dir = "C:\\Users\\egonzalez\\github\\workNotes\\cheatsheets"
+
+-- OS-aware opener
+local function _open_pdf_external(path)
+  if not path or path == "" then
+    return vim.notify("No file selected.", vim.log.levels.WARN)
+  end
+  local file = vim.fn.fnameescape(path)
+  local sys = vim.loop.os_uname().sysname
+  if sys == "Windows_NT" then
+    vim.fn.jobstart({ "cmd.exe", "/c", "start", "", file }, { detach = true })
+  elseif sys == "Darwin" then
+    vim.fn.jobstart({ "open", file }, { detach = true })
+  else
+    vim.fn.jobstart({ "xdg-open", file }, { detach = true })
+  end
+end
+
+-- Scan for PDFs (uses plenary if available)
+local function _scan_cheats(dir)
+  local ok, scandir = pcall(require, "plenary.scandir")
+  if ok then
+    return scandir.scan_dir(dir, { depth = 4, add_dirs = false, search_pattern = "%.pdf$" })
+  end
+  local list = vim.fn.globpath(dir, "**/*.pdf", true, true)
+  table.sort(list)
+  return list
+end
+
+-- Picker logic (Telescope or fallback)
+local function _pick_and_open()
+  local dir = vim.g.cheatsheets_dir
+  if dir == "" or vim.fn.isdirectory(dir) == 0 then
+    return vim.notify("Cheatsheets dir not found: " .. tostring(dir), vim.log.levels.ERROR)
+  end
+
+  local files = _scan_cheats(dir)
+  if not files or #files == 0 then
+    return vim.notify("No PDFs found in " .. dir, vim.log.levels.WARN)
+  end
+
+  local ok_telescope = pcall(require, "telescope")
+  if ok_telescope then
+    local pickers = require("telescope.pickers")
+    local finders = require("telescope.finders")
+    local conf = require("telescope.config").values
+    local actions = require("telescope.actions")
+    local action_state = require("telescope.actions.state")
+
+    pickers.new({}, {
+      prompt_title = "Cheat Sheets",
+      finder = finders.new_table({ results = files }),
+      sorter = conf.generic_sorter({}),
+      attach_mappings = function(_, map)
+        local open_selected = function(prompt_bufnr)
+          local entry = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+          _open_pdf_external(entry[1] or entry.value)
+        end
+        map("i", "<CR>", open_selected)
+        map("n", "<CR>", open_selected)
+        return true
+      end,
+    }):find()
+  else
+    vim.ui.select(files, {
+      prompt = "Open cheat sheet:",
+      format_item = function(item) return vim.fn.fnamemodify(item, ":t") end,
+    }, function(choice)
+      if choice then _open_pdf_external(choice) end
+    end)
+  end
+end
+
+-- Commands + keymap
+vim.api.nvim_create_user_command("Cheats", function() _pick_and_open() end,
+  { desc = "Pick a cheat-sheet PDF and open externally" })
+
+vim.api.nvim_create_user_command("SetCheatsDir", function(opts)
+  local p = opts.args ~= "" and opts.args or vim.fn.input("Cheats dir: ", vim.g.cheatsheets_dir)
+  if p and p ~= "" then
+    vim.g.cheatsheets_dir = vim.fn.expand(p)
+    vim.notify("Cheatsheets dir set to: " .. vim.g.cheatsheets_dir)
+  end
+end, { nargs = "?", complete = "dir", desc = "Set cheat-sheets directory" })
+
+vim.keymap.set("n", "<leader>cs", ":Cheats<CR>", { desc = "Cheat Sheets picker" })
 

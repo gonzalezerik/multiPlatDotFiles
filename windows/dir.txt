@@ -1,0 +1,5 @@
+.config: C:\Users\egonzalez\.config
+.glzr: C:\Users\egonzalez\.glzr
+nvim: C:\Users\egonzalez\AppData\Local\nvim
+powershell: \\PAPPFSHOA.hoa.lacoco.org\egonzalez$\WindowsPowerShell
+terminal: C:\Users\egonzalez\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState
