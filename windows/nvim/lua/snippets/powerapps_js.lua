@@ -1,251 +1,411 @@
-
 -- lua/snippets/powerapps_js.lua
--- Power Apps (Model-Driven) JavaScript snippets for LuaSnip
--- Preview shows the cheat-sheet comments; expansion inserts clean code.
-
 local ls = require("luasnip")
-local s  = ls.snippet
-local t  = ls.text_node
-local i  = ls.insert_node
-local fmt = require("luasnip.extras.fmt").fmt
+local s, t, i = ls.snippet, ls.text_node, ls.insert_node
 
--- Helper to make long preview descriptions easier to read
-local function lines(txt) return txt end
+-- ========= FORM EVENTS (JS) =========
+ls.add_snippets("javascript", {
+  s("md_form_onload", {
+    t({
+      "// FORM EVENTS",
+      "var Sdk = window.Sdk || {};",
+      "(function () {",
+      "  // Code to run in the form OnLoad event",
+      "  this.formOnLoad = function (executionContext) {",
+      "    var formContext = executionContext.getFormContext();",
+      "    // Add your code from the other tables here",
+      "    ",
+    }),
+    i(0),
+    t({
+      "",
+      "  }",
+      "",
+      "  // Code to run in the column OnChange event",
+      "  this.attributeOnChange = function (executionContext) {",
+      "    var formContext = executionContext.getFormContext();",
+      "    // Add your code from the other tables here",
+      "  }",
+      "",
+      "  // Code to run in the form OnSave event",
+      "  this.formOnSave = function (executionContext) {",
+      "    var formContext = executionContext.getFormContext();",
+      "    // Add your code from the other tables here",
+      "  }",
+      "}).call(Sdk);",
+    }),
+  }),
 
--- Filetypes these snippets apply to
-local ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" }
+  s("md_attr_onchange", {
+    t({
+      "// FORM EVENTS",
+      "// Code to run in the column OnChange event",
+      "this.attributeOnChange = function (executionContext) {",
+      "  var formContext = executionContext.getFormContext();",
+      "  // Add your code from the other tables here",
+      "  ",
+    }),
+    i(0),
+    t({ "", "}" }),
+  }),
 
-ls.add_snippets(ft, {
-
-  -- FORM: OnLoad handler
-  s(
-    { trig = "mdonload", name = "Form OnLoad", dscr = lines([[
-Runs on the form OnLoad event.
-Signature: function (executionContext) { var formContext = executionContext.getFormContext(); }
-Usage: Register Sdk.formOnLoad in the form library and pass executionContext.
-]]) },
-    fmt([[
-var Sdk = window.Sdk || {};
-(function () {{
-  this.formOnLoad = function (executionContext) {{
-    var formContext = executionContext.getFormContext();
-    {}
-  }};
-}}).call(Sdk);
-]], { i(0, "// code") })
-  ),
-
-  -- FORM: OnSave handler
-  s(
-    { trig = "mdonsave", name = "Form OnSave", dscr = lines([[
-Runs on the form OnSave event.
-Signature: function (executionContext) { var formContext = executionContext.getFormContext(); }
-]]) },
-    fmt([[
-var Sdk = window.Sdk || {};
-(function () {{
-  this.formOnSave = function (executionContext) {{
-    var formContext = executionContext.getFormContext();
-    {}
-  }};
-}}).call(Sdk);
-]], { i(0, "// code") })
-  ),
-
-  -- ATTRIBUTE: OnChange handler
-  s(
-    { trig = "mdonchange", name = "Column OnChange", dscr = lines([[
-Runs on a column's OnChange event.
-Get formContext via the executionContext argument and read/update attributes.
-]]) },
-    fmt([[
-var Sdk = window.Sdk || {};
-(function () {{
-  this.attributeOnChange = function (executionContext) {{
-    var formContext = executionContext.getFormContext();
-    {}
-  }};
-}}).call(Sdk);
-]], { i(0, "// code") })
-  ),
-
-  -- CURRENT ROW DATA
-  s(
-    { trig = "mdrow", name = "Get current row (entity, id, name)", dscr = lines([[
-Get current row reference:
-entityType → logical name; id → GUID (with/without braces); name → primary name.
-]]) },
-    fmt([[
-var current = formContext.data.entity.getEntityReference();
-var currentEntity = current.entityType;
-var currentId = current.id;
-var currentIdNoBraces = current.id.replace(/{{|}}/g, "");
-var currentName = current.name;
-{}
-]], { i(0) })
-  ),
-
-  -- LOOKUP READ + SET
-  s(
-    { trig = "mdlookup", name = "Read/Set lookup value", dscr = lines([[
-Read lookup: getValue() returns array [{ id, entityType, name }].
-Set lookup: setValue([{ id, entityType, name }]).
-]]) },
-    fmt([[
-var val = formContext.getAttribute("{}").getValue();
-if (val) {{
-  var entityType = val[0].entityType;
-  var id = val[0].id;
-  var name = val[0].name;
-}}
-var setVal = [{{ id: "{}", entityType: "{}", name: "{}" }}];
-formContext.getAttribute("{}").setValue(setVal);
-{}
-]], { i(1, "customerid"), i(2, "00000000-0000-0000-0000-000000000000"), i(3, "contact"), i(4, "Nancy Anderson (sample)"), i(5, "customerid"), i(0) })
-  ),
-
-  -- SHOW / HIDE FIELD
-  s(
-    { trig = "mdshow", name = "Show/Hide field", dscr = lines([[
-Use getControl(...).setVisible(true|false) to show or hide.
-]]) },
-    fmt([[
-formContext.getControl("{}").setVisible({});
-{}
-]], { i(1, "caseorigincode"), i(2, "true"), i(0) })
-  ),
-
-  -- REQUIRED LEVEL
-  s(
-    { trig = "mdreq", name = "Set required level", dscr = lines([[
-required|recommended|none via setRequiredLevel.
-]]) },
-    fmt([[
-formContext.getAttribute("{}").setRequiredLevel("{}");
-{}
-]], { i(1, "fieldname"), i(2, "required"), i(0) })
-  ),
-
-  -- READ COLUMN VALUES
-  s(
-    { trig = "mdget", name = "Get value / choice / text", dscr = lines([[
-getValue() for value/choice; getText() for choice text.
-]]) },
-    fmt([[
-var v = formContext.getAttribute("{}").getValue();
-var t = formContext.getAttribute("{}").getText();
-{}
-]], { i(1, "fieldname"), i(2, "fieldname"), i(0) })
-  ),
-
-  -- WEB API: RETRIEVE
-  s(
-    { trig = "mdgetapi", name = "Xrm.WebApi.retrieveRecord", dscr = lines([[
-Basic retrieve and with $expand for related data. Promise resolves with result object.
-]]) },
-    fmt([[
-Xrm.WebApi.retrieveRecord("{}", "{}", "{}").then(
-  function (result) {{
-    {}
-  }},
-  function (error) {{
-    console.log(error.message);
-  }}
-);
-]], { i(1, "contact"), i(2, "GUID_HERE"), i(3, "?$select=firstname"), i(0, "console.log('Firstname:', result.firstname);") })
-  ),
-
-  -- DIALOGS
-  s(
-    { trig = "mddialog", name = "Alert / Confirm dialogs", dscr = lines([[
-Xrm.Navigation.openAlertDialog / openConfirmDialog.
-]]) },
-    fmt([[
-var alertStrings = {{ confirmButtonLabel: "OK", text: "{}", title: "{}" }};
-var alertOptions = {{ height: 120, width: 260 }};
-Xrm.Navigation.openAlertDialog(alertStrings, alertOptions);
-
-var confirmStrings = {{ text: "{}", title: "{}" }};
-var confirmOptions = {{ height: 200, width: 450 }};
-Xrm.Navigation.openConfirmDialog(confirmStrings, confirmOptions).then(function (res) {{
-  if (res.confirmed) {{ {} }}
-}});
-]], { i(1, "This is an alert."), i(2, "Sample title"), i(3, "Proceed?"), i(4, "Confirmation"), i(5, "console.log('OK');") })
-  ),
-
-  -- DISABLE WHOLE TAB
-  s(
-    { trig = "mddisabtab", name = "Disable all fields in tab", dscr = lines([[
-Iterate controls in every section of a tab and disable them.
-]]) },
-    fmt([[
-(function () {{
-  var tab = formContext.ui.tabs.get("{}");
-  tab.sections.forEach(function (section) {{
-    section.controls.forEach(function (ctrl) {{ ctrl.setDisabled(true); }});
-  }});
-}})();
-{}
-]], { i(1, "Summary"), i(0) })
-  ),
-
-  -- DISABLE SECTION
-  s(
-    { trig = "mddisabsec", name = "Disable all fields in section", dscr = lines([[
-Disable all controls inside a specific section in a tab.
-]]) },
-    fmt([[
-(function () {{
-  var section = formContext.ui.tabs.get("{}").sections.get("{}");
-  section.controls.get().forEach(function (ctrl) {{ ctrl.setDisabled(true); }});
-}})();
-{}
-]], { i(1, "Summary"), i(2, "Case Details Summary"), i(0) })
-  ),
-
-  -- SHOW/HIDE TAB
-  s(
-    { trig = "mdtabvis", name = "Show/Hide tab", dscr = lines([[
-tab.setVisible(true|false) on a named tab.
-]]) },
-    fmt([[
-formContext.ui.tabs.get("{}").setVisible({});
-{}
-]], { i(1, "Details"), i(2, "true"), i(0) })
-  ),
-
-  -- REFRESH FORM
-  s(
-    { trig = "mdrefresh", name = "Refresh form", dscr = lines([[
-formContext.data.refresh(true|false) to save+refresh or just refresh.
-]]) },
-    fmt([[
-formContext.data.refresh({});
-{}
-]], { i(1, "false"), i(0) })
-  ),
-
-  -- BPF HEADER FIELD
-  s(
-    { trig = "mdbpf", name = "BPF (header) field ops", dscr = lines([[
-Use 'header_process_' prefix for BPF header fields.
-]]) },
-    fmt([[
-formContext.getAttribute("header_process_{}").setRequiredLevel("{}");
-formContext.getControl("header_process_{}").setDisabled({});
-{}
-]], { i(1, "fieldname"), i(2, "required"), i(3, "fieldname"), i(4, "true"), i(0) })
-  ),
-
-  -- IFRAME SRC
-  s(
-    { trig = "mdiframe", name = "Set IFRAME src", dscr = lines([[
-Set URL on an IFRAME control.
-]]) },
-    fmt([[
-formContext.getControl("{}").setSrc("{}");
-{}
-]], { i(1, "iframe"), i(2, "https://example.com"), i(0) })
-  ),
+  s("md_form_onsave", {
+    t({
+      "// FORM EVENTS",
+      "// Code to run in the form OnSave event",
+      "this.formOnSave = function (executionContext) {",
+      "  var formContext = executionContext.getFormContext();",
+      "  // Add your code from the other tables here",
+      "  ",
+    }),
+    i(0),
+    t({ "", "}" }),
+  }),
 })
 
+-- ========= GET CURRENT ROW DATA / LOOKUPS =========
+ls.add_snippets("javascript", {
+  s("md_get_current", {
+    t({
+      "// GET CURRENT ROW DATA",
+      "var currentRow = formContext.data.entity.getEntityReference();",
+      "// Get row table type ex: “incident” or “account”",
+      "var currentRowEntityType = currentRow.entityType;",
+      "// Get row GUID ex: “{67e86a65-4cd6-ec11-a7b5-000d3a9c27d2}”",
+      "var currentRowId = currentRow.id;",
+      "// Get row GUID without brackets ex: “67e86a65-4cd6-ec11-a7b5-000d3a9c…”",
+      "var currentRowIdNoBraces = currentRow.id.replace(/{|}/g, '');",
+      "// Get row logical name",
+      "var currentRowName = currentRow.name;",
+    }),
+  }),
+
+  s("md_lookup_get", {
+    t({
+      "// READ VALUES FROM LOOKUP",
+      'var ' }), i(1, "customer"), t(' = formContext.getAttribute("'),
+    i(2, "customerid"), t({ '").getValue();',
+      "// Get row table type ex: “incident” or “account”",
+      "var " }), i(3, "customerEntityType"), t(" = "), i(1, "customer"), t({ "[0].entityType;",
+      "// Get row GUID ex: “{67e86a65-4cd6-ec11-a7b5-000d3a9c27d2}”",
+      "var " }), i(4, "customerId"), t(" = "), i(1, "customer"), t({ "[0].id;",
+      "// Get row logical name",
+      "var " }), i(5, "customerName"), t(" = "), i(1, "customer"), t("[0].name;"),
+  }),
+})
+
+-- ========= WEB API RETRIEVE =========
+ls.add_snippets("javascript", {
+  s("md_retrieve", {
+    t({
+      "// READ VALUES FROM RELATED TABLES",
+      "// Basic retrieve",
+      'Xrm.WebApi.retrieveRecord("',
+    }), i(1, "contact"), t('", '), i(2, "customerId"), t({ ', "?$select=' }), i(3, "firstname"),
+    t({
+      '").then(',
+      "  function success(result) {",
+      '    console.log("Retrieved values: Name: " + result.' }),
+    i(3, "firstname"),
+    t({
+      ");",
+      "    // perform operations on record retrieval",
+      "  },",
+      "  function (error) {",
+      "    console.log(error.message);",
+      "    // handle error conditions",
+      "  }",
+      ");",
+    }),
+  }),
+
+  s("md_retrieve_expand", {
+    t({
+      "// READ VALUES FROM RELATED TABLES",
+      "// Using expand",
+      'Xrm.WebApi.retrieveRecord("',
+    }), i(1, "contact"), t('", '), i(2, "customerId"),
+    t({ '", "?$select=' }), i(3, "firstname"),
+    t({ '&$expand=' }), i(4, "modifiedby($select=fullname;$expand=businessunitid($select=name))"),
+    t({
+      '").then(',
+      "  function success(result) {",
+      '    console.log("Name: " + result.modifiedby.fullname);',
+      "    // perform operations on record retrieval",
+      "  },",
+      "  function (error) {",
+      "    console.log(error.message);",
+      "    // handle error conditions",
+      "  }",
+      ");",
+    }),
+  }),
+})
+
+-- ========= SHOW / HIDE FIELDS, SECTIONS, TABS =========
+ls.add_snippets("javascript", {
+  s("md_show_field", {
+    t({
+      "// SHOW / HIDE FIELDS",
+      "// Show",
+      'formContext.getControl("',
+    }), i(1, "caseorigincode"), t('").setVisible(true);'),
+  }),
+
+  s("md_hide_field", {
+    t({
+      "// SHOW / HIDE FIELDS",
+      "// Hide",
+      'formContext.getControl("',
+    }), i(1, "caseorigincode"), t('").setVisible(false);'),
+  }),
+
+  s("md_show_section", {
+    t({
+      "// SHOW / HIDE SECTIONS",
+      "// Show section within a specified tab",
+      'var tab = formContext.ui.tabs.get("',
+    }), i(1, "Summary"),
+    t('");\nvar section = tab.sections.get("'), i(2, "Timeline"),
+    t('");\nsection.setVisible(true);'),
+  }),
+
+  s("md_hide_section", {
+    t({
+      "// SHOW / HIDE SECTIONS",
+      "// Hide section within a specified tab",
+      'var tab = formContext.ui.tabs.get("',
+    }), i(1, "Summary"),
+    t('");\nvar section = tab.sections.get("'), i(2, "Timeline"),
+    t('");\nsection.setVisible(false);'),
+  }),
+
+  s("md_show_tab", {
+    t({
+      "// SHOW / HIDE TABS",
+      "// Show tab",
+      'var tab = formContext.ui.tabs.get("',
+    }), i(1, "Details"),
+    t('");\ntab.setVisible(true);'),
+  }),
+
+  s("md_hide_tab", {
+    t({
+      "// SHOW / HIDE TABS",
+      "// Hide tab",
+      'var tab = formContext.ui.tabs.get("',
+    }), i(1, "Details"),
+    t('");\ntab.setVisible(false);'),
+  }),
+})
+
+-- ========= REQUIRED LEVELS / READ-ONLY / REFRESH =========
+ls.add_snippets("javascript", {
+  s("md_required", {
+    t({
+      "// SET REQUIRED FIELDS",
+      "// Set field as required",
+      'formContext.getAttribute("',
+    }), i(1, "fieldname"), t('").setRequiredLevel("required");'),
+  }),
+
+  s("md_disable_field", {
+    t({
+      "// SET READ-ONLY FIELDS",
+      "// Set field read-only",
+      'formContext.getControl("',
+    }), i(1, "caseorigincode"), t('").setDisabled(true);'),
+  }),
+
+  s("md_enable_field", {
+    t({
+      "// SET READ-ONLY FIELDS",
+      "// Set field editable",
+      'formContext.getControl("',
+    }), i(1, "caseorigincode"), t('").setDisabled(false);'),
+  }),
+
+  s("md_refresh_save", {
+    t({
+      "// REFRESH & SAVE THE FORM",
+      "// Save and refresh the form",
+      "formContext.data.refresh(true);",
+    }),
+  }),
+
+  s("md_refresh", {
+    t({
+      "// REFRESH & SAVE THE FORM",
+      "// Refresh the form (without saving)",
+      "formContext.data.refresh(false);",
+    }),
+  }),
+})
+
+-- ========= DIALOGS =========
+ls.add_snippets("javascript", {
+  s("md_alert", {
+    t({
+      "// DIALOG",
+      "// alert dialog",
+      'var alertStrings = { confirmButtonLabel: "Yes", text: "',
+    }), i(1, "This is an alert."), t('", title: "'), i(2, "Sample title"), t({ '" };',
+      "var alertOptions = { height: 120, width: 260 };",
+      "Xrm.Navigation.openAlertDialog(alertStrings, alertOptions).then(",
+      "  function (success) {",
+      '    console.log("Alert dialog closed");',
+      "  },",
+      "  function (error) {",
+      "    console.log(error.message);",
+      "  }",
+      ");",
+    }),
+  }),
+
+  s("md_confirm", {
+    t({
+      "// DIALOG",
+      "// confirm dialog",
+      'var confirmStrings = { text:"',
+    }), i(1, "This is a confirmation."), t('", title:"'), i(2, "Confirmation Dialog"), t({ '" };',
+      "var confirmOptions = { height: 200, width: 450 };",
+      "Xrm.Navigation.openConfirmDialog(confirmStrings, confirmOptions).then(",
+      "  function (success) {",
+      "    if (success.confirmed)",
+      '      console.log("Dialog closed using OK button.");',
+      "    else",
+      '      console.log("Dialog closed using Cancel button or X.");',
+      "  }",
+      ");",
+    }),
+  }),
+})
+
+-- ========= SET FIELD VALUES =========
+ls.add_snippets("javascript", {
+  s("md_set_lookup", {
+    t({
+      "// SET FIELD VALUES",
+      "// Set lookup value",
+      "var lookupValue = [];",
+      "lookupValue[0] = {};",
+      'lookupValue[0].id = "',
+    }), i(1, "a431636b-4cd6-ec11-a7b5-000d3a9c27d2"), t({ '";',
+      'lookupValue[0].entityType = "' }),
+    i(2, "contact"), t({ '";',
+      'lookupValue[0].name = "' }),
+    i(3, "Nancy Anderson (sample)"), t({ '";',
+      'formContext.getAttribute("' }),
+    i(4, "customerid"), t('").setValue(lookupValue);'),
+  }),
+
+  s("md_set_multi", {
+    t({
+      "// SET FIELD VALUES",
+      "// Set choices values",
+      'formContext.getAttribute("',
+    }), i(1, "multichoice"), t('").setValue(['), i(2, "100000000,100000001,100000002"), t("]);"),
+  }),
+
+  s("md_set_text", {
+    t({
+      "// SET FIELD VALUES",
+      "// Set text value",
+      'formContext.getAttribute("',
+    }), i(1, "textfield"), t('").setValue("'), i(2, "Those are the steps"), t('");'),
+  }),
+
+  s("md_set_number", {
+    t({
+      "// SET FIELD VALUES",
+      "// Set number value",
+      'formContext.getAttribute("',
+    }), i(1, "numberfield"), t('").setValue('), i(2, "100"), t(");"),
+  }),
+})
+
+-- ========= DISABLE ENTIRE SECTION / TAB =========
+ls.add_snippets("javascript", {
+  s("md_disable_section_all", {
+    t({
+      "// SET ALL FIELDS READ-ONLY IN SECTION",
+      "this.disableSection = function(formContext, tab, section) {",
+      "  var section = formContext.ui.tabs.get(tab).sections.get(section);",
+      "  var controls = section.controls.get();",
+      "  var controlsLenght = controls.length;",
+      "  for (var i = 0; i < controlsLenght; i++) {",
+      "    controls[i].setDisabled(true);",
+      "  }",
+      "}",
+      "// call the function to disable all the fields in the section",
+      'Sdk.disableSection(formContext,"',
+    }), i(1, "Summary"), t('","'), i(2, "Case Details Summary"), t('");'),
+  }),
+
+  s("md_disable_tab_all", {
+    t({
+      "// SET ALL FIELDS READ-ONLY IN TAB",
+      "this.disableTab = function(formContext, tab) {",
+      "  formContext.ui.tabs.get(tab).sections.forEach(function (section){",
+      "    section.controls.forEach(function (control) {",
+      "      control.setDisabled(true);",
+      "    })",
+      "  });",
+      "}",
+      "// call the function to disable all the fields in the section",
+      'Sdk.disableTab(formContext,"',
+    }), i(1, "Summary"), t('");'),
+  }),
+})
+
+-- ========= IFRAME SRC =========
+ls.add_snippets("javascript", {
+  s("md_iframe_src", {
+    t({
+      "// SET URL FOR IFRAME",
+      'formContext.getControl("',
+    }), i(1, "iframe"), t('").setSrc(" '), i(2, "https://danikahil.com/"), t('");'),
+  }),
+})
+
+-- ========= BPF FIELDS =========
+ls.add_snippets("javascript", {
+  s("md_bpf_required", {
+    t({
+      "// FIELDS IN BPF (Business Process Flow)",
+      "// Add \"header process_\" to the field name",
+      "// Set field as required",
+      'formContext.getAttribute("header_process_',
+    }), i(1, "fieldname"), t('").setRequiredLevel("required");'),
+  }),
+
+  s("md_bpf_disable", {
+    t({
+      "// FIELDS IN BPF (Business Process Flow)",
+      "// Add \"header process_\" to the field name",
+      "// Set field read-only",
+      'formContext.getControl("header_process_',
+    }), i(1, "fieldname"), t('").setDisabled(true);'),
+  }),
+})
+
+-- ========= HTML helpers (relative paths) =========
+ls.add_snippets("html", {
+  s("md_linkcss", {
+    t({
+      "<!-- HTML helpers: reference a stylesheet in ../styles/ -->",
+      '<link rel="stylesheet" type="text/css" href="../styles/',
+    }), i(1, "styles.css"), t('" />'),
+  }),
+  s("md_scriptjs", {
+    t({
+      "<!-- HTML helpers: reference a script in ../scripts/ -->",
+      '<script type="text/javascript" src="../scripts/',
+    }), i(1, "myScript.js"), t('"></script>'),
+  }),
+  s("md_imgwr", {
+    t({
+      "<!-- HTML helpers: reference an image in ../Images/ -->",
+      '<img src="../Images/',
+    }), i(1, "image1.png"), t('" />'),
+  }),
+})

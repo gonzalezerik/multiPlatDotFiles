@@ -1,4 +1,3 @@
-
 -- :contentReference[oaicite:0]{index=0}
 -- init.lua — Neovim 0.11+ (Windows-friendly)
 -- Full setup for Blink.CMP + LuaSnip + D365/Dataverse + JS PowerApps snippets
@@ -158,12 +157,8 @@ local plugins = {
   { "akinsho/toggleterm.nvim", version = "*", config = true },
   { "stevearc/overseer.nvim", opts = {} },
   { "rafamadriz/friendly-snippets" },
-
-
-  { "akinsho/toggleterm.nvim", version = "*", config = true },
-  { "stevearc/overseer.nvim", opts = {} },
-  { "rafamadriz/friendly-snippets" }
 }
+
 
 require("lazy").setup(plugins, { ui = { border = "rounded" } })
 
@@ -498,4 +493,3 @@ vim.api.nvim_create_user_command("SetCheatsDir", function(opts)
 end, { nargs = "?", complete = "dir", desc = "Set cheat-sheets directory" })
 
 vim.keymap.set("n", "<leader>cs", ":Cheats<CR>", { desc = "Cheat Sheets picker" })
-
